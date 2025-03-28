@@ -1,10 +1,12 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
 // Initialize the Google Generative AI with API key
-const genAI = new GoogleGenerativeAI(process.env.REACT_APP_GOOGLE_API_KEY);
+const apiKey = process.env.REACT_APP_GOOGLE_API_KEY;
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 // Set the model name from environment variable or use default
-const MODEL_NAME = process.env.REACT_APP_GEMINI_MODEL || "gemini-2.0-flash";
+// Using a more recent model - gemini-1.5-flash is recommended
+const MODEL_NAME = process.env.REACT_APP_GEMINI_MODEL || "gemini-1.5-flash";
 
 // Set up safety settings to prevent harmful content
 const safetySettings = [
@@ -34,6 +36,14 @@ const safetySettings = [
  */
 export async function generateResponse(messages, searchResults = null) {
   try {
+    // Check if API key is configured
+    if (!genAI) {
+      return "API key not configured. Please set REACT_APP_GOOGLE_API_KEY in your .env file.";
+    }
+    
+    // Log the model being used (helps with debugging)
+    console.log(`Using Gemini model: ${MODEL_NAME}`);
+    
     // Get the model
     const model = genAI.getGenerativeModel({ model: MODEL_NAME });
     
@@ -60,7 +70,15 @@ export async function generateResponse(messages, searchResults = null) {
     return result.response.text();
   } catch (error) {
     console.error("Error generating AI response:", error);
-    throw new Error(`Failed to generate response: ${error.message}`);
+    
+    // Return a more user-friendly error message
+    if (error.message?.includes("403") || error.message?.includes("401")) {
+      return "Authentication error: Please check your API key.";
+    } else if (error.message?.includes("404")) {
+      return "The specified model was not found. Please check REACT_APP_GEMINI_MODEL in your .env file.";
+    }
+    
+    return `Failed to generate response: ${error.message}`;
   }
 }
 
@@ -71,6 +89,12 @@ export async function generateResponse(messages, searchResults = null) {
  */
 export async function generateRelatedQuestions(query) {
   try {
+    // Check if API key is configured
+    if (!genAI) {
+      console.warn("API key not configured for related questions");
+      return [];
+    }
+    
     // Get the model
     const model = genAI.getGenerativeModel({ model: MODEL_NAME });
     

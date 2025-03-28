@@ -6,8 +6,12 @@ import { cn } from "../lib/utils";
 
 export function HistorySidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Check if history is enabled using the environment variable
+  // Default to false if it's not defined to prevent errors
   const enabled = process.env.REACT_APP_ENABLE_HISTORY === "true";
 
+  // If history is disabled, don't render the component
   if (!enabled) {
     return null;
   }
