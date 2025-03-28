@@ -1,9 +1,8 @@
 import React, { useRef, useState } from "react";
-import { ArrowUp, MessageCirclePlus, Square, Globe } from "lucide-react";
+import { ArrowUp, MessageCirclePlus, Square, Search } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
 import { Button } from "./ui/Button";
 import { cn } from "../lib/utils";
-import { Toggle } from "@radix-ui/react-toggle";
 
 export function ChatInput({
   input,
@@ -79,21 +78,16 @@ export function ChatInput({
         {/* Bottom menu area */}
         <div className="flex items-center justify-between p-3">
           <div className="flex items-center gap-2">
-            <Toggle
-              aria-label="Toggle search mode"
-              pressed={searchModeEnabled}
-              onPressedChange={setSearchModeEnabled}
-              className={cn(
-                "gap-1 px-3 border border-input text-muted-foreground bg-background rounded-full",
-                "data-[state=on]:bg-accent-blue",
-                "data-[state=on]:text-accent-blue-foreground",
-                "data-[state=on]:border-accent-blue-border",
-                "hover:bg-accent hover:text-accent-foreground"
-              )}
+            <Button
+              type="button"
+              size="sm"
+              variant={searchModeEnabled ? "accent-blue" : "outline"}
+              onClick={() => setSearchModeEnabled(!searchModeEnabled)}
+              className="gap-1.5 px-3 py-1 rounded-full h-8 transition-colors duration-200"
             >
-              <Globe className="size-4" />
-              <span className="text-xs">Search</span>
-            </Toggle>
+              <Search className="size-3.5" />
+              <span className="text-xs">Web Search</span>
+            </Button>
           </div>
           <div className="flex items-center gap-2">
             {hasMessages && (

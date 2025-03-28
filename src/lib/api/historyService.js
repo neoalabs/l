@@ -7,10 +7,18 @@ import { Redis } from '@upstash/redis';
 const HISTORY_VERSION = 'v1';
 const LOCAL_STORAGE_KEY = 'gemini-search-history';
 
-// Environment configurations
-const ENABLE_HISTORY = process.env.REACT_APP_ENABLE_HISTORY === 'true';
-const REDIS_URL = process.env.REACT_APP_UPSTASH_REDIS_REST_URL;
-const REDIS_TOKEN = process.env.REACT_APP_UPSTASH_REDIS_REST_TOKEN;
+// Environment configurations - safely access env variables
+const getEnvVar = (name) => {
+  return typeof window !== 'undefined' && window.env && window.env[name] 
+    ? window.env[name] 
+    : typeof process !== 'undefined' && process.env && process.env[name] 
+      ? process.env[name] 
+      : undefined;
+};
+
+const ENABLE_HISTORY = getEnvVar('REACT_APP_ENABLE_HISTORY') === 'true';
+const REDIS_URL = getEnvVar('REACT_APP_UPSTASH_REDIS_REST_URL');
+const REDIS_TOKEN = getEnvVar('REACT_APP_UPSTASH_REDIS_REST_TOKEN');
 
 // Storage mode - will be set during initialization
 let STORAGE_MODE = 'none';
