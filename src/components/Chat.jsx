@@ -10,6 +10,7 @@ import { EmptyScreen } from "./EmptyScreen";
 import { search } from "../lib/api/searchApi";
 import { generateResponse, generateRelatedQuestions } from "../lib/api/aiService";
 import { getChat, saveChat } from "../lib/api/historyService";
+import { toast } from "sonner";
 
 export function Chat({ initialQuery = null }) {
   const { id: chatId } = useParams();
@@ -92,6 +93,32 @@ export function Chat({ initialQuery = null }) {
     await processQuery(input, searchModeEnabled);
   }, [input, processQuery]);
 
+  // Handle deep research results
+  const handleResearchComplete = async (researchReport) => {
+    // Add the research report as an assistant message
+    const researchMessage = { 
+      role: "assistant", 
+      content: `**Deep Research Results:**\n\n${researchReport}`,
+      isResearch: true  // Add a flag to identify this as a research message
+    };
+    
+    setMessages(prev => [...prev, researchMessage]);
+    
+    // Save to chat history
+    const title = messages.length > 0 ? messages[0].content.slice(0, 50) : "Deep Research";
+    await saveChat({
+      id: sessionId.current,
+      title,
+      messages: [...messages, researchMessage],
+      createdAt: new Date(),
+      userId: "anonymous",
+      path: `/chat/${sessionId.current}`
+    });
+    
+    // Show a success toast
+    toast.success("Deep research completed successfully");
+  };
+
   // Handle search from initial query
   const handleSearch = useCallback(async (query, isInitial = false) => {
     setInput(query);
@@ -160,7 +187,10 @@ export function Chat({ initialQuery = null }) {
             {message.role === "user" ? (
               <UserMessage message={message.content} />
             ) : (
-              <BotMessage message={message.content} />
+              <BotMessage 
+                message={message.content} 
+                isResearch={message.isResearch} 
+              />
             )}
             
             {/* Show search results after user messages if available */}
@@ -220,6 +250,7 @@ export function Chat({ initialQuery = null }) {
           isLoading={isLoading}
           onNewChat={handleNewChat}
           hasMessages={messages.length > 0}
+          onResearchComplete={handleResearchComplete}
         />
       </div>
     </div>

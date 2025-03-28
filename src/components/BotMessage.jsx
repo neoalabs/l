@@ -2,16 +2,17 @@ import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeExternalLinks from "rehype-external-links";
 import { Logo } from "./Logo";
-import { Copy, Check, ThumbsUp, ThumbsDown } from "lucide-react";
+import { BookOpen, Copy, Check, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { coldarkDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
 
-export function BotMessage({ message, className }) {
+export function BotMessage({ message, className, isResearch = false }) {
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message);
@@ -29,14 +30,26 @@ export function BotMessage({ message, className }) {
     toast.success(`Thank you for your ${type === 'like' ? 'positive' : 'negative'} feedback!`);
   };
 
+  // If this is a research message and it's long, we might want to truncate it initially
+  const shouldTruncate = isResearch && message.length > 2000 && !isExpanded;
+  const displayMessage = shouldTruncate 
+    ? message.substring(0, 2000) + "..." 
+    : message;
+
   return (
     <div className="flex gap-3 group">
       <div className="relative flex flex-col items-center">
-        <div className="mt-4 w-6 h-6 flex items-center justify-center rounded-full bg-primary/10">
-          <Logo className="size-5" />
+        <div className={cn(
+          "mt-4 w-6 h-6 flex items-center justify-center rounded-full",
+          isResearch ? "bg-blue-100 dark:bg-blue-900" : "bg-primary/10"
+        )}>
+          {isResearch ? <BookOpen className="size-4 text-blue-500 dark:text-blue-300" /> : <Logo className="size-5" />}
         </div>
       </div>
-      <div className="flex-1 rounded-2xl px-4 relative">
+      <div className={cn(
+        "flex-1 rounded-2xl px-4 relative",
+        isResearch && "border-l-2 border-blue-300 dark:border-blue-500"
+      )}>
         <div className="py-2 flex-1">
           <ReactMarkdown
             rehypePlugins={[[rehypeExternalLinks, { target: "_blank" }]]}
@@ -103,8 +116,22 @@ export function BotMessage({ message, className }) {
               }
             }}
           >
-            {message}
+            {displayMessage}
           </ReactMarkdown>
+          
+          {/* Show "Read more" button for truncated research messages */}
+          {shouldTruncate && (
+            <div className="mt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsExpanded(true)}
+                className="text-xs"
+              >
+                Read full research report
+              </Button>
+            </div>
+          )}
           
           {/* Actions toolbar */}
           <div className="flex justify-end items-center mt-2 gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
